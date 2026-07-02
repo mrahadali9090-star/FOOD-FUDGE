@@ -818,13 +818,13 @@
     });
   });
 
-  // Reservation form — submits to Google Sheets via Sheet.best
+  // Reservation form — submits directly to Google Sheets via Apps Script
   const form = document.getElementById('reserveForm');
   const submitBtn = document.getElementById('submitBtn');
   const formStatus = document.getElementById('formStatus');
 
-  // Your Sheet.best endpoint — connects this form to your Google Sheet
-  const SHEET_BEST_URL = 'https://api.sheetbest.com/sheets/b533d667-f279-4d43-a9ac-9ab68c6fec9f';
+  // Your Google Apps Script endpoint — writes directly to your Google Sheet
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzukt3eZ7YzkUgxO7EF8vsHHmo4OyCpPtzOY7zcMdHqfwvOFMM-02YiYkOfJMOpddg7/exec';
 
   function setError(id, message){
     const el = document.getElementById('err-' + id);
@@ -871,9 +871,11 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Sending...';
 
-    try{
-      const response = await fetch(SHEET_BEST_URL, {
+    try {
+      // Google Apps Script requires no-cors mode to avoid CORS errors
+      await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
+        mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           Name: name,
@@ -887,13 +889,14 @@
         })
       });
 
-      if(!response.ok) throw new Error('Request failed');
-
+      // no-cors means we can't read the response — but if we got here, it sent
+      formStatus.style.color = '#7A8C5C';
       formStatus.textContent = `Thanks, ${name.split(' ')[0]} — we'll confirm by email shortly.`;
       form.reset();
-    } catch(err){
+
+    } catch(err) {
       formStatus.style.color = '#b04a2e';
-      formStatus.textContent = 'Something went wrong — please call us instead, or try again.';
+      formStatus.textContent = 'Something went wrong — please call us on 051 1234 5678.';
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Request reservation';
